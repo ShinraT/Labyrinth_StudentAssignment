@@ -9,6 +9,7 @@ public static class PathfindingAlgorithm
     {
         // Most of your solution should be implemented in this method.
 
+
         Debug.LogWarning("FindShortestPath is not implemented.");
         return null;
     }
