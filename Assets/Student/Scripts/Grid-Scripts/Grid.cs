@@ -5,6 +5,8 @@ using UnityEngine.Rendering;
 public class Grid : MonoBehaviour
 {
     [Header("Grid Settings")]
+    // Size är hur bred och hög gridden är efter generering.
+    // Size sätts till ett annat värde, kan använda det för att traversera igenom gridden
     public int xSize = 10;
     public int zSize = 10;
     public float cellSize = 1f;
