@@ -3,35 +3,39 @@ using System.Collections.Generic;
 using Unity.Properties;
 using System.Collections;
 
-public class Graph 
+public class Graph
 {
 
-    private int e;
-    private int v;
+    private int edgeCount;
+    private int nodeCount;
 
-    public int V() { return v; }
-    public int E() { return e; }
+    public int V() { return nodeCount; }
+    public int E() { return edgeCount; }
+    public IEnumerable<int> Adj(int v) { return adj[v]; }
     private List<int>[] adj;
 
-    public Graph(int V)
+    public Graph(int _nodeCount)
     {
-        this.v = V;
-        adj = new List<int>[v];
-        for(int i = 0; i < v; i++)
+        this.nodeCount = _nodeCount;
+        adj = new List<int>[nodeCount];
+        for (int i = 0; i < nodeCount; i++)
         {
             adj[i] = new List<int>();
         }
     }
-    
 
-    public void AddEdge(int v, int w)
+
+    public void AddEdge(int nodeA, int nodeB)
     {
-        adj[v].Add(w);
-        adj[w].Add(v);
-        e++;
+        adj[nodeA].Add(nodeB);
+        adj[nodeB].Add(nodeA);
+        edgeCount++;
     }
-    
 
+    public void AddDirectedEdge(int nodeA, int nodeB)
+    {
+        adj[nodeA].Add(nodeB);
+        edgeCount++;
 
-    
+    }
 }
