@@ -8,6 +8,10 @@ public class EdgeWeightedDigraph
 
     private int nodeCount;
     private int edgeCount;
+
+
+    public int V() { return nodeCount; }
+    public int E() { return edgeCount; }
     public EdgeWeightedDigraph(int _nodeCount)
     {
         adj = new List<DirectedEdge>[_nodeCount];
@@ -20,7 +24,10 @@ public class EdgeWeightedDigraph
 
     public void AddEdge(DirectedEdge edge)
     {
+        int v = edge.From;
+        int w = edge.To;
         adj[edge.From].Add(edge);
+        edgeCount++;
     }
 
     public IEnumerable<DirectedEdge> Adj(int _node)

@@ -9,7 +9,7 @@ public static class PathfindingAlgorithm
     {
         // Most of your solution should be implemented in this method.
         Graph graph = new Graph(mapData.Height * mapData.Width);
-
+        EdgeWeightedDigraph weightedDigraph = new EdgeWeightedDigraph(mapData.Height * mapData.Width);
         // Itererar över alla noder // alla Vector2Int som är giltiga i mappen. 
 
 
@@ -25,9 +25,13 @@ public static class PathfindingAlgorithm
                 Vector2Int _neighbor = new Vector2Int(currentCell.x - 1, currentCell.y); // Vänster Neighbor
                 if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
                 {
+                    // Normal Oriktad Graph. Metod skapar en riktad graf.
                     NodeIndexer(currentCell,_neighbor,  out currentNodeIndex, out neighBorNodeIndex, mapData);
-                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
+                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);                    
                     BetterDebugDraw(currentCell, _neighbor);
+                    //Edged-Weighted Graph
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
+                    weightedDigraph.AddEdge(edge);
                 }
 
                 _neighbor = new Vector2Int(currentCell.x + 1, currentCell.y); // Höger Neighbor
@@ -36,6 +40,9 @@ public static class PathfindingAlgorithm
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
                     BetterDebugDraw(currentCell, _neighbor);
+                    //Edged-Weighted Graph
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
+                    weightedDigraph.AddEdge(edge);
                 }
 
                 _neighbor = new Vector2Int(currentCell.x, currentCell.y + 1); // Upp Neighbor
@@ -44,6 +51,9 @@ public static class PathfindingAlgorithm
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
                     BetterDebugDraw(currentCell, _neighbor);
+                    //Edged-Weighted Graph
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
+                    weightedDigraph.AddEdge(edge);
                 }
 
                 _neighbor = new Vector2Int(currentCell.x, currentCell.y - 1); // Ned neighbor
@@ -52,6 +62,9 @@ public static class PathfindingAlgorithm
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
                     BetterDebugDraw(currentCell, _neighbor);
+                    //Edged-Weighted Graph
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
+                    weightedDigraph.AddEdge(edge);
                 }
             }
         }
@@ -74,6 +87,7 @@ public static class PathfindingAlgorithm
 
 
         Debug.Log($"Antal Edges{graph.E()}");
+        Debug.Log($"Antal Weighted Edgdes{weightedDigraph.E()}");
 
         return path;
         Debug.LogWarning("FindShortestPath is not implemented.");

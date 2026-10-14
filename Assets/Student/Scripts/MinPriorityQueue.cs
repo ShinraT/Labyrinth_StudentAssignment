@@ -1,91 +1,333 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System;
-
-public class MinPriorityQueue<T> where T : IComparable<T>
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+public class IndexMinPQ<Key> : IEnumerable<int> where Key : IComparable<Key>
 {
-    private int count;
-    private T[] pq;
+    private readonly int maxN;
+    private int n;
 
-    public MinPriorityQueue(int capacity)
+    // Binary heap using 1-based indexing
+    private readonly int[] pq;
+
+    // Inverse of pq:
+    // qp[pq[i]] = pq[qp[i]] = i
+    private readonly int[] qp;
+
+    // keys[i] = priority of index i
+    private readonly Key[] keys;
+
+
+    public IndexMinPQ(int maxN)
     {
-        pq = new T[capacity + 1];
-        count = 0;
-    }
+        if (maxN < 0)
+            throw new ArgumentException();
 
+        this.maxN = maxN;
+        n = 0;
 
-    public void Enqueue(T item)
-    {
-        if (count == pq.Length - 1)
-            Resize(2 * pq.Length);
-        pq[++count] = item;
-        Swim(count);
-    }
+        keys = new Key[maxN + 1];
+        pq = new int[maxN + 1];
+        qp = new int[maxN + 1];
 
-    private void Resize(int capacity)
-    {
-        T[] temp = new T[capacity];
-        for (int i = 1; i <= count; i++)
+        for (int i = 0; i <= maxN; i++)
         {
-            temp[i] = pq[i];
+            qp[i] = -1;
         }
-        pq = temp;
     }
 
-    public T Dequeue()
+
+    public bool IsEmpty()
     {
-        if (count == 0)
-            throw new InvalidOperationException("Priority queue is empty.");
-        T min = pq[1];
-        Swap(1, count--);
+        return n == 0;
+    }
+
+
+    public bool Contains(int i)
+    {
+        ValidateIndex(i);
+
+        return qp[i] != -1;
+    }
+
+
+    public int Size()
+    {
+        return n;
+    }
+
+
+    public void Insert(int i, Key key)
+    {
+        ValidateIndex(i);
+
+        if (Contains(i))
+        {
+            throw new ArgumentException(
+                "Index is already in the priority queue");
+        }
+
+        n++;
+
+        qp[i] = n;
+        pq[n] = i;
+        keys[i] = key;
+
+        Swim(n);
+    }
+
+
+    public int MinIndex()
+    {
+        if (n == 0)
+        {
+            throw new InvalidOperationException(
+                "Priority queue underflow");
+        }
+
+        return pq[1];
+    }
+
+
+    public Key MinKey()
+    {
+        if (n == 0)
+        {
+            throw new InvalidOperationException(
+                "Priority queue underflow");
+        }
+
+        return keys[pq[1]];
+    }
+
+
+    public int DelMin()
+    {
+        if (n == 0)
+        {
+            throw new InvalidOperationException(
+                "Priority queue underflow");
+        }
+
+        int min = pq[1];
+
+        Exch(1, n);
+        n--;
+
         Sink(1);
-        pq[count + 1] = default(T); // Avoid loitering
-        if (count > 0 && count == (pq.Length - 1) / 4)
-            Resize(pq.Length / 2);
+
+        qp[min] = -1;
+        keys[min] = default;
+        pq[n + 1] = -1;
+
         return min;
     }
 
+
+    public Key KeyOf(int i)
+    {
+        ValidateIndex(i);
+
+        if (!Contains(i))
+        {
+            throw new InvalidOperationException(
+                "Index is not in the priority queue");
+        }
+
+        return keys[i];
+    }
+
+
+    public void ChangeKey(int i, Key key)
+    {
+        ValidateIndex(i);
+
+        if (!Contains(i))
+        {
+            throw new InvalidOperationException(
+                "Index is not in the priority queue");
+        }
+
+        keys[i] = key;
+
+        Swim(qp[i]);
+        Sink(qp[i]);
+    }
+
+
+    public void Change(int i, Key key)
+    {
+        ChangeKey(i, key);
+    }
+
+
+    public void DecreaseKey(int i, Key key)
+    {
+        ValidateIndex(i);
+
+        if (!Contains(i))
+        {
+            throw new InvalidOperationException(
+                "Index is not in the priority queue");
+        }
+
+        if (keys[i].CompareTo(key) == 0)
+        {
+            throw new ArgumentException(
+                "Calling DecreaseKey() with an equal key");
+        }
+
+        if (keys[i].CompareTo(key) < 0)
+        {
+            throw new ArgumentException(
+                "Calling DecreaseKey() with a greater key");
+        }
+
+        keys[i] = key;
+
+        Swim(qp[i]);
+    }
+
+
+    public void IncreaseKey(int i, Key key)
+    {
+        ValidateIndex(i);
+
+        if (!Contains(i))
+        {
+            throw new InvalidOperationException(
+                "Index is not in the priority queue");
+        }
+
+        if (keys[i].CompareTo(key) == 0)
+        {
+            throw new ArgumentException(
+                "Calling IncreaseKey() with an equal key");
+        }
+
+        if (keys[i].CompareTo(key) > 0)
+        {
+            throw new ArgumentException(
+                "Calling IncreaseKey() with a smaller key");
+        }
+
+        keys[i] = key;
+
+        Sink(qp[i]);
+    }
+
+
+    public void Delete(int i)
+    {
+        ValidateIndex(i);
+
+        if (!Contains(i))
+        {
+            throw new InvalidOperationException(
+                "Index is not in the priority queue");
+        }
+
+        int index = qp[i];
+
+        Exch(index, n);
+        n--;
+
+        Swim(index);
+        Sink(index);
+
+        keys[i] = default;
+        qp[i] = -1;
+    }
+
+
+    private void ValidateIndex(int i)
+    {
+        if (i < 0)
+        {
+            throw new ArgumentException(
+                $"Index is negative: {i}");
+        }
+
+        if (i >= maxN)
+        {
+            throw new ArgumentException(
+                $"Index >= capacity: {i}");
+        }
+    }
+
+
+    private bool Greater(int i, int j)
+    {
+        return keys[pq[i]].CompareTo(keys[pq[j]]) > 0;
+    }
+
+
+    private void Exch(int i, int j)
+    {
+        int swap = pq[i];
+
+        pq[i] = pq[j];
+        pq[j] = swap;
+
+        qp[pq[i]] = i;
+        qp[pq[j]] = j;
+    }
+
+
+    private void Swim(int k)
+    {
+        while (k > 1 && Greater(k / 2, k))
+        {
+            Exch(k, k / 2);
+
+            k = k / 2;
+        }
+    }
+
+
     private void Sink(int k)
     {
-        // Move the item at index k down the heap until the heap property is restored
-        while (2 * k <= count)
+        while (2 * k <= n)
         {
             int j = 2 * k;
-            if (j < count && pq[j].CompareTo(pq[j + 1]) > 0)
+
+            // Pick the smaller child
+            if (j < n && Greater(j, j + 1))
+            {
                 j++;
-            if (pq[k].CompareTo(pq[j]) <= 0)
+            }
+
+            // Heap property is restored
+            if (!Greater(k, j))
+            {
                 break;
-            Swap(k, j);
+            }
+
+            Exch(k, j);
+
             k = j;
         }
     }
 
-    private void Swim(int k)
+
+    public IEnumerator<int> GetEnumerator()
     {
-        // Move the item at index k up the heap until the heap property is restored
-        while (k > 1 && pq[k].CompareTo(pq[k / 2]) < 0)
-        {   
-            Swap(k, k / 2);
-            k = k / 2;
+        IndexMinPQ<Key> copy = new IndexMinPQ<Key>(maxN);
+
+        for (int i = 1; i <= n; i++)
+        {
+            copy.Insert(pq[i], keys[pq[i]]);
+        }
+
+        while (!copy.IsEmpty())
+        {
+            yield return copy.DelMin();
         }
     }
- 
-    public T PeekMin()
-    {
-        if (count == 0)
-            throw new InvalidOperationException("Priority queue is empty.");
-        return pq[1];
-    }
 
-    public bool IsEmpty()
-    {
-        return count == 0;
-    }
 
-    private void Swap(int i, int j)
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        T temp = pq[i];
-        pq[i] = pq[j];
-        pq[j] = temp;
+        return GetEnumerator();
     }
 }
