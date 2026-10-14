@@ -24,7 +24,6 @@ public class Graph
         }
     }
 
-
     public void AddEdge(int nodeA, int nodeB)
     {
         adj[nodeA].Add(nodeB);

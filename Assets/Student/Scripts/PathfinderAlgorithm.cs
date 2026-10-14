@@ -132,6 +132,11 @@ public static class PathfindingAlgorithm
         _neighborIndex = _neighbor.y * _mapData.Width + _neighbor.x;
     }
 
+    private void GenerateGraph()
+    {
+
+    }
+
 
 
 
