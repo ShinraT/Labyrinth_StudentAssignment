@@ -40,12 +40,12 @@ public static class PathfindingAlgorithm
         // För BFS, konverterar nodeIndexen till Vector2Int och lägger till dem i result-listan.
 
         /* Breadth-First-Search */
-        ConvertPathToVector2Int(tempPath, mapData, path);
+        //ConvertPathToVector2Int(tempPath, mapData, path);
 
         //För Dijkstra, konverterar DirectedEdge till Vector2Int och lägger till dem i result-listan.
 
         /* Dijkstras Algoritm */
-        //ConvertPathToVector2Int(tempWeightedPath, mapData, path);
+        ConvertPathToVector2Int(tempWeightedPath, mapData, path);
 
 
 
@@ -111,7 +111,7 @@ public static class PathfindingAlgorithm
                     // Normal Oriktad Graph. Metod skapar en riktad graf.
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
+                    //BetterDebugDraw(currentCell, _neighbor);
 
                 }
 
@@ -120,7 +120,7 @@ public static class PathfindingAlgorithm
                 {
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
+                    //BetterDebugDraw(currentCell, _neighbor);
                 }
 
                 _neighbor = new Vector2Int(currentCell.x, currentCell.y + 1); // Upp Neighbor
@@ -128,7 +128,7 @@ public static class PathfindingAlgorithm
                 {
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
+                    //BetterDebugDraw(currentCell, _neighbor);
 
                 }
 
@@ -137,7 +137,7 @@ public static class PathfindingAlgorithm
                 {
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
+                    //BetterDebugDraw(currentCell, _neighbor);
                 }
             }
         }
