@@ -14,6 +14,7 @@ public class EdgeWeightedDigraph
     public int E() { return edgeCount; }
     public EdgeWeightedDigraph(int _nodeCount)
     {
+        this.nodeCount = _nodeCount;
         adj = new List<DirectedEdge>[_nodeCount];
         for(int i = 0; i < _nodeCount; i++)
         {

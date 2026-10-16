@@ -1,94 +1,57 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public static class PathfindingAlgorithm
 {
     // TODO: Implement the pathfinding assignment here.
     // Find the lowest-cost path from start to goal using the map dimensions, wall costs and directed jumps exposed by IMapData.
+    static double totalPathCost = 0;
     public static List<Vector2Int> FindShortestPath(Vector2Int start, Vector2Int goal, IMapData mapData)
     {
-        // Most of your solution should be implemented in this method.
+        totalPathCost = 0;
+        // Instantierar en Oviktad-graf och en Viktad-graf med antalet noder som är lika med mapData.Height * mapData.Width.
         Graph graph = new Graph(mapData.Height * mapData.Width);
         EdgeWeightedDigraph weightedDigraph = new EdgeWeightedDigraph(mapData.Height * mapData.Width);
-        // Itererar över alla noder // alla Vector2Int som är giltiga i mappen. 
 
 
-        // For loopen lägger in bågar mellan de traverserbara noderna.  
-        for (int y = 0; y < mapData.Height; y++)
-        {
-            for (int x = 0; x < mapData.Width; x++)
-            {
-                Vector2Int currentCell = new Vector2Int(x, y);
-                int currentNodeIndex;
-                int neighBorNodeIndex;
+        // Skapar alla bågar mellan noderna för den oviktade grafen. (Riktad graf)
+        GenerateGraph(graph, mapData);
 
-                Vector2Int _neighbor = new Vector2Int(currentCell.x - 1, currentCell.y); // Vänster Neighbor
-                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
-                {
-                    // Normal Oriktad Graph. Metod skapar en riktad graf.
-                    NodeIndexer(currentCell,_neighbor,  out currentNodeIndex, out neighBorNodeIndex, mapData);
-                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);                    
-                    BetterDebugDraw(currentCell, _neighbor);
-                    //Edged-Weighted Graph
-                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
-                    weightedDigraph.AddEdge(edge);
-                }
 
-                _neighbor = new Vector2Int(currentCell.x + 1, currentCell.y); // Höger Neighbor
-                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
-                {
-                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
-                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
-                    //Edged-Weighted Graph
-                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
-                    weightedDigraph.AddEdge(edge);
-                }
+        //Skapar alla bågar mellan noderna för den viktade grafen. (Riktad graf)
+        GenerateEdgeWeightedGraph(weightedDigraph, mapData);
 
-                _neighbor = new Vector2Int(currentCell.x, currentCell.y + 1); // Upp Neighbor
-                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
-                {
-                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
-                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
-                    //Edged-Weighted Graph
-                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
-                    weightedDigraph.AddEdge(edge);
-                }
-
-                _neighbor = new Vector2Int(currentCell.x, currentCell.y - 1); // Ned neighbor
-                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
-                {
-                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
-                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
-                    BetterDebugDraw(currentCell, _neighbor);
-                    //Edged-Weighted Graph
-                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, 0.1f);
-                    weightedDigraph.AddEdge(edge);
-                }
-            }
-        }
-
+        //Skapar ett unikt index för varje (x, y) position.
+        // Likadant som i WFC för en 1D-Array vid omvandling från 2D-Koordinator:  Index = y * Width + x
         int startIndex = start.y * mapData.Width + start.x;
         BFS BreadthFirstSearch = new BFS(graph, startIndex);
-        IEnumerable<int> tempPath = BreadthFirstSearch.pathTo(goal.y * mapData.Width +  goal.x);
+        DijkstraSP dijkstraSP = new DijkstraSP(weightedDigraph, startIndex);
+
+        // De två olika pathfinding algoritmerna returnerar en IEnumerable med antingen DirectedEdge eller nodeIndex.
+        IEnumerable<int> tempPath = BreadthFirstSearch.pathTo(goal.y * mapData.Width + goal.x);
+        IEnumerable<DirectedEdge> tempWeightedPath = dijkstraSP.pathTo(goal.y * mapData.Width + goal.x);
+
 
         List<Vector2Int> path = new List<Vector2Int>();
 
 
-        // Konverterar tillbaka nodeIndexen till en Vector2Int med hjälp av modulo operator. 
-        foreach(int index in tempPath)
-        {
-            int x = index % mapData.Width;
-            int y = index / mapData.Width;
-            path.Add(new Vector2Int(x, y));
-        }
+        // För BFS, konverterar nodeIndexen till Vector2Int och lägger till dem i result-listan.
+
+        /* Breadth-First-Search */
+        ConvertPathToVector2Int(tempPath, mapData, path);
+
+        //För Dijkstra, konverterar DirectedEdge till Vector2Int och lägger till dem i result-listan.
+
+        /* Dijkstras Algoritm */
+        //ConvertPathToVector2Int(tempWeightedPath, mapData, path);
 
 
 
         Debug.Log($"Antal Edges{graph.E()}");
         Debug.Log($"Antal Weighted Edgdes{weightedDigraph.E()}");
-
+        Debug.Log($"Path cost: {totalPathCost}");
         return path;
         Debug.LogWarning("FindShortestPath is not implemented.");
         return null;
@@ -126,18 +89,145 @@ public static class PathfindingAlgorithm
     {
         Debug.DrawLine(new Vector3(_from.x + 0.5f, 0, _from.y + 0.5f), new Vector3(_to.x + 0.5f, 0, _to.y + 0.5f), Color.black, 60f);
     }
-    private static void NodeIndexer(Vector2Int _currentNode , Vector2Int _neighbor, out int _current, out int _neighborIndex, IMapData _mapData)
+    private static void NodeIndexer(Vector2Int _currentNode, Vector2Int _neighbor, out int _current, out int _neighborIndex, IMapData _mapData)
     {
         _current = _currentNode.y * _mapData.Width + _currentNode.x;
         _neighborIndex = _neighbor.y * _mapData.Width + _neighbor.x;
     }
 
-    private void GenerateGraph()
+    private static void GenerateGraph(Graph graph, IMapData mapData)
     {
+        for (int y = 0; y < mapData.Height; y++)
+        {
+            for (int x = 0; x < mapData.Width; x++)
+            {
+                Vector2Int currentCell = new Vector2Int(x, y);
+                int currentNodeIndex;
+                int neighBorNodeIndex;
+
+                Vector2Int _neighbor = new Vector2Int(currentCell.x - 1, currentCell.y); // Vänster Neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    // Normal Oriktad Graph. Metod skapar en riktad graf.
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
+                    BetterDebugDraw(currentCell, _neighbor);
+
+                }
+
+                _neighbor = new Vector2Int(currentCell.x + 1, currentCell.y); // Höger Neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
+                    BetterDebugDraw(currentCell, _neighbor);
+                }
+
+                _neighbor = new Vector2Int(currentCell.x, currentCell.y + 1); // Upp Neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
+                    BetterDebugDraw(currentCell, _neighbor);
+
+                }
+
+                _neighbor = new Vector2Int(currentCell.x, currentCell.y - 1); // Ned neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    graph.AddDirectedEdge(currentNodeIndex, neighBorNodeIndex);
+                    BetterDebugDraw(currentCell, _neighbor);
+                }
+            }
+        }
 
     }
 
+    private static void GenerateEdgeWeightedGraph(EdgeWeightedDigraph weightedDigraph, IMapData mapData)
+    {
+
+        float jumpCost = 1.0f;
+        float wallCost = 1.0f;
+        double jumpCostDouble = 1.0;
+        for (int y = 0; y < mapData.Height; y++)
+        {
+            wallCost = 1.0f;
+            for (int x = 0; x < mapData.Width; x++)
+            {
+                Vector2Int currentCell = new Vector2Int(x, y);
+                int currentNodeIndex;
+                int neighBorNodeIndex;
+
+                Vector2Int _neighbor = new Vector2Int(currentCell.x - 1, currentCell.y); // Vänster Neighbor
+
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    //Konstant uppslagningstid i ett Dictionary. 
+                    wallCost = mapData.GetVerticalWallCost(currentCell.x,currentCell.y);
+
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
+                    weightedDigraph.AddEdge(edge);
+
+                }
+                _neighbor = new Vector2Int(currentCell.x + 1, currentCell.y); // Höger Neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    //Konstant uppslagningstid i ett Dictionary. 
+                    wallCost = mapData.GetVerticalWallCost(_neighbor.x, currentCell.y);
+
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
+                    weightedDigraph.AddEdge(edge);
+                }
+                _neighbor = new Vector2Int(currentCell.x, currentCell.y + 1); // Upp Neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    //Konstant uppslagningstid i ett Dictionary. 
+                    wallCost = mapData.GetHorizontalWallCost(currentCell.x, _neighbor.y);
 
 
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
+                    weightedDigraph.AddEdge(edge);
+                }
+                _neighbor = new Vector2Int(currentCell.x, currentCell.y - 1); // Ned neighbor
+                if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
+                {
+                    //Konstant uppslagningstid i ett Dictionary. 
+                    wallCost = mapData.GetHorizontalWallCost(currentCell.x, currentCell.y);
 
+                    NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
+                    DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
+                    weightedDigraph.AddEdge(edge);
+                }
+            }
+        }
+    }
+
+    // För Dijkstra, konverterar DirectedEdge till Vector2Int och lägger till dem i result-listan.
+    private static void ConvertPathToVector2Int(IEnumerable<DirectedEdge> path, IMapData mapData, List<Vector2Int> result)
+    {
+        // O (
+        foreach (DirectedEdge edge in path)
+        {
+            int x = edge.To % mapData.Width;
+            int y = edge.To / mapData.Width;
+            result.Add(new Vector2Int(x, y));
+            totalPathCost += edge.Weight;
+        }
+        Debug.Log($"Antal Edges i pathen {result.Count}");
+    }
+
+    // För BFS , konverterar nodeIndexen till Vector2Int och lägger till dem i result-listan.
+    private static void ConvertPathToVector2Int(IEnumerable<int> path, IMapData mapData, List<Vector2Int> result)
+    {
+        foreach (int nodeIndex in path)
+        {
+            int x = nodeIndex % mapData.Width;
+            int y = nodeIndex / mapData.Width;
+            result.Add(new Vector2Int(x, y));
+        }
+    }
 }
