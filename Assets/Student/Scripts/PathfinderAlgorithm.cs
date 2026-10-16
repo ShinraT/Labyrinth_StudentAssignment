@@ -165,6 +165,17 @@ public static class PathfindingAlgorithm
                 {
                     //Konstant uppslagningstid i ett Dictionary. 
                     wallCost = mapData.GetVerticalWallCost(currentCell.x,currentCell.y);
+                    if(mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
+                    {
+                        var jumps = mapData.GetJumpsFrom(_neighbor);
+                        foreach(var jump in jumps)
+                        {
+                            mapData.TryGetJumpCost(_neighbor, jump.To, out jumpCost);
+                            DirectedEdge _edge = new DirectedEdge(_neighbor.y * mapData.Width + _neighbor.x, jump.To.y * mapData.Width + jump.To.x, jumpCost);
+                            weightedDigraph.AddEdge(_edge);
+                        }
+
+                    }
 
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
@@ -176,7 +187,17 @@ public static class PathfindingAlgorithm
                 {
                     //Konstant uppslagningstid i ett Dictionary. 
                     wallCost = mapData.GetVerticalWallCost(_neighbor.x, currentCell.y);
+                    if (mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
+                    {
+                        var jumps = mapData.GetJumpsFrom(_neighbor);
+                        foreach (var jump in jumps)
+                        {
+                            mapData.TryGetJumpCost(_neighbor, jump.To, out jumpCost);
+                            DirectedEdge _edge = new DirectedEdge(_neighbor.y * mapData.Width + _neighbor.x, jump.To.y * mapData.Width + jump.To.x, jumpCost);
+                            weightedDigraph.AddEdge(_edge);
+                        }
 
+                    }
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
                     weightedDigraph.AddEdge(edge);
@@ -186,7 +207,17 @@ public static class PathfindingAlgorithm
                 {
                     //Konstant uppslagningstid i ett Dictionary. 
                     wallCost = mapData.GetHorizontalWallCost(currentCell.x, _neighbor.y);
+                    if (mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
+                    {
+                        var jumps = mapData.GetJumpsFrom(_neighbor);
+                        foreach (var jump in jumps)
+                        {
+                            mapData.TryGetJumpCost(_neighbor, jump.To, out jumpCost);
+                            DirectedEdge _edge = new DirectedEdge(_neighbor.y * mapData.Width + _neighbor.x, jump.To.y * mapData.Width + jump.To.x, jumpCost);
+                            weightedDigraph.AddEdge(_edge);
+                        }
 
+                    }
 
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
@@ -197,7 +228,17 @@ public static class PathfindingAlgorithm
                 {
                     //Konstant uppslagningstid i ett Dictionary. 
                     wallCost = mapData.GetHorizontalWallCost(currentCell.x, currentCell.y);
+                    if (mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
+                    {
+                        var jumps = mapData.GetJumpsFrom(_neighbor);
+                        foreach (var jump in jumps)
+                        {
+                            mapData.TryGetJumpCost(_neighbor, jump.To, out jumpCost);
+                            DirectedEdge _edge = new DirectedEdge(_neighbor.y * mapData.Width + _neighbor.x, jump.To.y * mapData.Width + jump.To.x, jumpCost);
+                            weightedDigraph.AddEdge(_edge);
+                        }
 
+                    }
                     NodeIndexer(currentCell, _neighbor, out currentNodeIndex, out neighBorNodeIndex, mapData);
                     DirectedEdge edge = new DirectedEdge(currentNodeIndex, neighBorNodeIndex, wallCost);
                     weightedDigraph.AddEdge(edge);
