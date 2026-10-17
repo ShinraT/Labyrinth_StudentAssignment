@@ -25,10 +25,12 @@ public class AStar
         distTo[_source] = 0.0;
         reached.Add(_source);
 
+        int totalNodesVisited = 0;
         pq.Insert(_source, distTo[_source]);
         while (!pq.IsEmpty())
         {
             int v = pq.DelMin();
+                totalNodesVisited++;
             if (v == goal)
                 break; //Vi har hittat en väg, då breakar vi.
 
@@ -37,6 +39,7 @@ public class AStar
                 Relax(edge);
             }
         }
+        //Debug.Log($"A* Besökta Noder:  { totalNodesVisited}");
     }
 
     private void Relax(DirectedEdge _edge)

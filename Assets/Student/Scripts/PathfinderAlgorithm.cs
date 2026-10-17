@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
+using System.Diagnostics;
 
 public static class PathfindingAlgorithm
 {
@@ -11,55 +12,94 @@ public static class PathfindingAlgorithm
     public static List<Vector2Int> FindShortestPath(Vector2Int start, Vector2Int goal, IMapData mapData)
     {
         totalPathCost = 0;
-        // Instantierar en Oviktad-graf och en Viktad-graf med antalet noder som är lika med mapData.Height * mapData.Width.
+
         Graph graph = new Graph(mapData.Height * mapData.Width);
-        EdgeWeightedDigraph weightedDigraph = new EdgeWeightedDigraph(mapData.Height * mapData.Width);
+        EdgeWeightedDigraph weightedDigraph =
+            new EdgeWeightedDigraph(mapData.Height * mapData.Width);
 
-
-        // Skapar alla bågar mellan noderna för den oviktade grafen. (Riktad graf)
         GenerateGraph(graph, mapData);
-
-
-        //Skapar alla bågar mellan noderna för den viktade grafen. (Riktad graf)
         GenerateEdgeWeightedGraph(weightedDigraph, mapData);
 
-        //Skapar ett unikt index för varje (x, y) position.
-        // Likadant som i WFC för en 1D-Array vid omvandling från 2D-Koordinator:  Index = y * Width + x
         int startIndex = start.y * mapData.Width + start.x;
         int goalIndex = goal.y * mapData.Width + goal.x;
-        BFS BreadthFirstSearch = new BFS(graph, startIndex);
-        DijkstraSP dijkstraSP = new DijkstraSP(weightedDigraph, startIndex);
-        AStar aStar = new AStar(weightedDigraph, startIndex,goalIndex ,mapData);
 
-        // De två olika pathfinding algoritmerna returnerar en IEnumerable med antingen DirectedEdge eller nodeIndex.
-        IEnumerable<int> tempPath = BreadthFirstSearch.pathTo(goal.y * mapData.Width + goal.x);
-        IEnumerable<DirectedEdge> tempWeightedPath = dijkstraSP.pathTo(goal.y * mapData.Width + goal.x);
+        Stopwatch stopwatch = new Stopwatch();
+
+
+        // ---------------- BFS ----------------
+
+        stopwatch.Start();
+
+        BFS breadthFirstSearch = new BFS(graph, startIndex);
+
+        stopwatch.Stop();
+
+        double bfsTime = stopwatch.Elapsed.TotalMilliseconds;
+
+        IEnumerable<int> tempBFSPath =
+            breadthFirstSearch.pathTo(goalIndex);
+
+
+        // ---------------- DIJKSTRA ----------------
+
+        stopwatch.Restart();
+
+        DijkstraSP dijkstraSP = new DijkstraSP(weightedDigraph, startIndex);
+
+        stopwatch.Stop();
+        double dijkstraTime = stopwatch.Elapsed.TotalMilliseconds;
+
+        IEnumerable<DirectedEdge> tempDijkstraPath = dijkstraSP.pathTo(goalIndex);
+
+
+        // ---------------- A* ----------------
+
+        stopwatch.Restart();
+
+        AStar aStar = new AStar(weightedDigraph, startIndex, goalIndex, mapData);
+
+        stopwatch.Stop();
+        double aStarTime = stopwatch.Elapsed.TotalMilliseconds;
+
         IEnumerable<DirectedEdge> tempAStarPath = aStar.pathTo(goalIndex);
+
+
+        // =====================================================
+        // PATH RESULT
+        // =====================================================
 
         List<Vector2Int> path = new List<Vector2Int>();
 
-
-        // För BFS, konverterar nodeIndexen till Vector2Int och lägger till dem i result-listan.
-
-        /* Breadth-First-Search */
-        //ConvertPathToVector2Int(tempPath, mapData, path);
-
-        //För Dijkstra, konverterar DirectedEdge till Vector2Int och lägger till dem i result-listan.
-
-        /* Dijkstras Algoritm */
-        ConvertPathToVector2Int(tempWeightedPath, mapData, path);
-
-        /* A* Algoritm */
-        //ConvertPathToVector2Int(tempAStarPath, mapData, path);
+        // Dummy-listor för algoritmerna vi inte använder
+        List<Vector2Int> dummyBFS = new List<Vector2Int>();
+        List<Vector2Int> dummyDijkstra = new List<Vector2Int>();
 
 
+        // BFS -> dummy
+        ConvertPathToVector2Int(tempBFSPath, mapData, dummyBFS);
 
-        Debug.Log($"Antal Edges{graph.E()}");
-        Debug.Log($"Antal Weighted Edgdes{weightedDigraph.E()}");
-        Debug.Log($"Path cost: {totalPathCost}");
+
+        // Dijkstra -> dummy
+        ConvertPathToVector2Int(tempDijkstraPath, mapData, dummyDijkstra);
+
+
+        // A* -> den riktiga listan som returneras
+        ConvertPathToVector2Int(tempAStarPath, mapData, path);
+
+
+        // =====================================================
+        // RESULTAT
+        // =====================================================
+
+        UnityEngine.Debug.Log($"BFS:      {bfsTime} ms");
+        UnityEngine.Debug.Log($"Dijkstra: {dijkstraTime} ms");
+        UnityEngine.Debug.Log($"A*:       {aStarTime} ms");
+
+        //UnityEngine.Debug.Log($"Antal Edges: {graph.E()}");
+        //UnityEngine.Debug.Log($"Antal Weighted Edges: {weightedDigraph.E()}");
+        UnityEngine.Debug.Log($"Path cost: {totalPathCost}");
+
         return path;
-        Debug.LogWarning("FindShortestPath is not implemented.");
-        return null;
     }
 
     public static bool IsMovementBlocked(Vector2Int from, Vector2Int to, IMapData mapData)
@@ -92,7 +132,7 @@ public static class PathfindingAlgorithm
 
     private static void BetterDebugDraw(Vector2Int _from, Vector2Int _to)
     {
-        Debug.DrawLine(new Vector3(_from.x + 0.5f, 0, _from.y + 0.5f), new Vector3(_to.x + 0.5f, 0, _to.y + 0.5f), Color.black, 60f);
+        UnityEngine.Debug.DrawLine(new Vector3(_from.x + 0.5f, 0, _from.y + 0.5f), new Vector3(_to.x + 0.5f, 0, _to.y + 0.5f), Color.black, 60f);
     }
     private static void NodeIndexer(Vector2Int _currentNode, Vector2Int _neighbor, out int _current, out int _neighborIndex, IMapData _mapData)
     {
@@ -263,7 +303,7 @@ public static class PathfindingAlgorithm
             result.Add(new Vector2Int(x, y));
             totalPathCost += edge.Weight;
         }
-        Debug.Log($"Antal Edges i pathen {result.Count}");
+        //UnityEngine.Debug.Log($"Antal Edges i pathen {result.Count}");
     }
 
     // För BFS , konverterar nodeIndexen till Vector2Int och lägger till dem i result-listan.
