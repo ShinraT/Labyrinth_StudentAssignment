@@ -26,13 +26,15 @@ public static class PathfindingAlgorithm
         //Skapar ett unikt index för varje (x, y) position.
         // Likadant som i WFC för en 1D-Array vid omvandling från 2D-Koordinator:  Index = y * Width + x
         int startIndex = start.y * mapData.Width + start.x;
+        int goalIndex = goal.y * mapData.Width + goal.x;
         BFS BreadthFirstSearch = new BFS(graph, startIndex);
         DijkstraSP dijkstraSP = new DijkstraSP(weightedDigraph, startIndex);
+        AStar aStar = new AStar(weightedDigraph, startIndex,goalIndex ,mapData);
 
         // De två olika pathfinding algoritmerna returnerar en IEnumerable med antingen DirectedEdge eller nodeIndex.
         IEnumerable<int> tempPath = BreadthFirstSearch.pathTo(goal.y * mapData.Width + goal.x);
         IEnumerable<DirectedEdge> tempWeightedPath = dijkstraSP.pathTo(goal.y * mapData.Width + goal.x);
-
+        IEnumerable<DirectedEdge> tempAStarPath = aStar.pathTo(goalIndex);
 
         List<Vector2Int> path = new List<Vector2Int>();
 
@@ -46,6 +48,9 @@ public static class PathfindingAlgorithm
 
         /* Dijkstras Algoritm */
         ConvertPathToVector2Int(tempWeightedPath, mapData, path);
+
+        /* A* Algoritm */
+        //ConvertPathToVector2Int(tempAStarPath, mapData, path);
 
 
 
@@ -271,4 +276,6 @@ public static class PathfindingAlgorithm
             result.Add(new Vector2Int(x, y));
         }
     }
+
+
 }

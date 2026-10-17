@@ -61,11 +61,11 @@ public class DijkstraSP
     }
 
     // Vi lägger dem i en stack precis som i BFS för att vi vill ha dem i rätt ordning. (Baklänges)
-    public IEnumerable<DirectedEdge> pathTo(int v)
+    public IEnumerable<DirectedEdge> pathTo(int goal)
     {
-        if (!hasPathTo(v)) return null;
+        if (!hasPathTo(goal)) return null;
         Stack<DirectedEdge> _path = new Stack<DirectedEdge>();
-        for(DirectedEdge edge = edgeTo[v]; edge != null; edge = edgeTo[edge.From])
+        for(DirectedEdge edge = edgeTo[goal]; edge != null; edge = edgeTo[edge.From])
         {
             _path.Push(edge);
         }
