@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UnityEditor.Rendering;
 public class DijkstraSP
 {
-    private DirectedEdge[] edgeTo;
-    private double[] distTo;
+    private DirectedEdge[] edgeTo; // 
+    private double[] distTo; // Representerar kostnaden för att komma till den nodens index. 
     private IndexMinPQ<double> pq;
 
     public DijkstraSP(EdgeWeightedDigraph _graph, int _source)
@@ -25,7 +25,7 @@ public class DijkstraSP
         {
             int v = pq.DelMin();
             //För alla noder i graphen kollar relaxar vi alla dess edges
-            // O(V * E)
+
             foreach (var edge in _graph.Adj(v))
             {
                 Relax(edge);
@@ -35,21 +35,23 @@ public class DijkstraSP
     // Relax tar in en edge, vi kommer att relaxa alla 
     private void Relax(DirectedEdge _edge) 
     {
-        int from = _edge.From, to = _edge.To;
+        int from = _edge.From,
+            to = _edge.To;
         
         if (distTo[to] > distTo[from] + _edge.Weight)
         {
             distTo[to] = distTo[from] + _edge.Weight;
             edgeTo[to] = _edge;
 
-            // O(log n) Tid för uppslagning i balanserat binärt söktröd.
+            // O(1) konstant tid för contains. 
             if (pq.Contains(to))
             {
+                // O(log n) Tid för decreaseKey i binary heap. Vi uppdaterar noden i pq med dess distTo värde som nyckel.
                 pq.DecreaseKey(to, distTo[to]);
             }
             else
             {
-                // O(log n) Tid för uppslagning i balanserat binärt sökträd. 
+                // O(log n) Tid för insert i binary heap. Vi lägger in noden i pq med dess distTo värde som nyckel.
                 pq.Insert(to, distTo[to]);
             }
         }

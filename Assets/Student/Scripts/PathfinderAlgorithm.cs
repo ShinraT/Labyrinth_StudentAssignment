@@ -73,6 +73,7 @@ public static class PathfindingAlgorithm
         // Dummy-listor för algoritmerna vi inte använder
         List<Vector2Int> dummyBFS = new List<Vector2Int>();
         List<Vector2Int> dummyDijkstra = new List<Vector2Int>();
+        List<Vector2Int> dummyAStar = new List<Vector2Int>();
 
 
         // BFS -> dummy
@@ -80,11 +81,11 @@ public static class PathfindingAlgorithm
 
 
         // Dijkstra -> dummy
-        ConvertPathToVector2Int(tempDijkstraPath, mapData, dummyDijkstra);
+        ConvertPathToVector2Int(tempDijkstraPath, mapData, path);
 
 
         // A* -> den riktiga listan som returneras
-        ConvertPathToVector2Int(tempAStarPath, mapData, path);
+        ConvertPathToVector2Int(tempAStarPath, mapData, dummyAStar);
 
 
         // =====================================================
