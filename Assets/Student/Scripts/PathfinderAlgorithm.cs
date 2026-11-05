@@ -70,6 +70,9 @@ public static class PathfindingAlgorithm
 
         List<Vector2Int> path = new List<Vector2Int>();
 
+
+
+
         // Dummy-listor för algoritmerna vi inte använder
         List<Vector2Int> dummyBFS = new List<Vector2Int>();
         List<Vector2Int> dummyDijkstra = new List<Vector2Int>();
@@ -81,8 +84,11 @@ public static class PathfindingAlgorithm
 
 
         // Dijkstra -> dummy
-        ConvertPathToVector2Int(tempDijkstraPath, mapData, path);
+        ConvertPathToVector2Int(tempDijkstraPath, mapData, dummyDijkstra);
 
+
+        IEnumerable<int> newPath = dijkstraSP.newPathTo(goalIndex);
+        ConvertPathToVector2Int(newPath, mapData, path);
 
         // A* -> den riktiga listan som returneras
         ConvertPathToVector2Int(tempAStarPath, mapData, dummyAStar);
@@ -210,11 +216,11 @@ public static class PathfindingAlgorithm
                 if (IsInsideMap(_neighbor, mapData) && !IsMovementBlocked(currentCell, _neighbor, mapData))
                 {
                     //Konstant uppslagningstid i ett Dictionary. 
-                    wallCost = mapData.GetVerticalWallCost(currentCell.x,currentCell.y);
-                    if(mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
+                    wallCost = mapData.GetVerticalWallCost(currentCell.x, currentCell.y);
+                    if (mapData.HasJumpFrom(_neighbor.x, _neighbor.y))
                     {
                         var jumps = mapData.GetJumpsFrom(_neighbor);
-                        foreach(var jump in jumps)
+                        foreach (var jump in jumps)
                         {
                             mapData.TryGetJumpCost(_neighbor, jump.To, out jumpCost);
                             DirectedEdge _edge = new DirectedEdge(_neighbor.y * mapData.Width + _neighbor.x, jump.To.y * mapData.Width + jump.To.x, jumpCost);

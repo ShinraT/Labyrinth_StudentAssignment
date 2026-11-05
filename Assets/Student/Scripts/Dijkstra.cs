@@ -7,9 +7,10 @@ public class DijkstraSP
     private DirectedEdge[] edgeTo; // 
     private double[] distTo; // Representerar kostnaden för att komma till den nodens index. 
     private IndexMinPQ<double> pq;
-
+    private int source;
     public DijkstraSP(EdgeWeightedDigraph _graph, int _source)
     {
+        source = _source;
         edgeTo = new DirectedEdge[_graph.V()];
         distTo = new double[_graph.V()];
         pq = new IndexMinPQ<double>(_graph.V());
@@ -71,7 +72,29 @@ public class DijkstraSP
         {
             _path.Push(edge);
         }
+        
         return _path;
+    }
+
+    public IEnumerable<int> newPathTo(int goal)
+    {
+        if (!hasPathTo(goal))
+            return null;
+
+        Stack<int> path = new Stack<int>();
+
+        int current = goal;
+        path.Push(current);
+
+        while (current != source)
+        {
+            DirectedEdge edge = edgeTo[current];
+
+            current = edge.From;
+            path.Push(current);
+        }
+
+        return path;
     }
 
 }
